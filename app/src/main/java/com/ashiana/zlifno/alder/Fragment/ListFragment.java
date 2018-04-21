@@ -23,7 +23,7 @@ import android.widget.TextView;
 
 import com.ashiana.zlifno.alder.NoteListAdapter;
 import com.ashiana.zlifno.alder.R;
-import com.ashiana.zlifno.alder.data.TextNote;
+import com.ashiana.zlifno.alder.data.entity.NoteType;
 import com.ashiana.zlifno.alder.view_model.ListViewModel;
 import com.leinardi.android.speeddial.SpeedDialActionItem;
 import com.leinardi.android.speeddial.SpeedDialView;
@@ -44,7 +44,7 @@ public class ListFragment extends Fragment {
     public interface MainIntents {
         void newNote();
 
-        void updateNote(TextNote textNote, int position, View v);
+        void updateNote(Object noteType, int position, View v);
     }
 
     private View rootView;
@@ -54,13 +54,12 @@ public class ListFragment extends Fragment {
     private RecyclerView recyclerView;
     private NoteListAdapter adapter;
     private int listSize;
-    public static TextNote isNewNote;
+    public static Object isNewNote;
 
     // For spotlight
     SimpleTarget fabSpotlight, animSpotlight, fabSpotlight2, fabSpotlight3, noteCardSpotlight;
 
     public ListFragment() {
-
     }
 
     public static ListFragment newInstance() {
@@ -78,7 +77,7 @@ public class ListFragment extends Fragment {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new NoteListAdapter(getContext());
+        adapter = new NoteListAdapter(getContext(), listViewModel);
         recyclerView.setAdapter(adapter);
         listViewModel = ViewModelProviders.of(this).get(ListViewModel.class);
         setLiveDataObserver();
@@ -96,22 +95,22 @@ public class ListFragment extends Fragment {
                 if (!sharedPreferences.getBoolean(TAG_FINISHED_SPOTLIGHT1, false)) {
 
                     // callback when Spotlight ends
-                    Spotlight.with(getActivity())
-                            .setOverlayColor(ContextCompat.getColor(getContext(), R.color.background)) // background overlay color
-                            .setDuration(1000L) // duration of Spotlight emerging and disappearing in ms
-                            .setAnimation(new DecelerateInterpolator(2f)) // animation of Spotlight
-                            .setTargets(fabSpotlight, animSpotlight, fabSpotlight2) // set targets. see below for more info
-                            .setClosedOnTouchedOutside(true) // set if target is closed when touched outside
-                            .setOnSpotlightEndedListener(() -> {
-                                if (sharedPreferences.getBoolean(TAG_FINISHED_SPOTLIGHT1, true)) {
-                                    speedDialView.open();
-                                    startSpotlight2();
-                                }
-                            })
-                            .start(); // start Spotlight
-
-                    editor.putBoolean(TAG_FINISHED_SPOTLIGHT1, true);
-                    editor.apply();
+//                    Spotlight.with(getActivity())
+//                            .setOverlayColor(ContextCompat.getColor(getContext(), R.color.background)) // background overlay color
+//                            .setDuration(1000L) // duration of Spotlight emerging and disappearing in ms
+//                            .setAnimation(new DecelerateInterpolator(2f)) // animation of Spotlight
+//                            .setTargets(fabSpotlight, animSpotlight, fabSpotlight2) // set targets. see below for more info
+//                            .setClosedOnTouchedOutside(true) // set if target is closed when touched outside
+//                            .setOnSpotlightEndedListener(() -> {
+//                                if (sharedPreferences.getBoolean(TAG_FINISHED_SPOTLIGHT1, true)) {
+//                                    speedDialView.open();
+//                                    startSpotlight2();
+//                                }
+//                            })
+//                            .start(); // start Spotlight
+//
+//                    editor.putBoolean(TAG_FINISHED_SPOTLIGHT1, true);
+//                    editor.apply();
 
                 }
             }
@@ -133,6 +132,8 @@ public class ListFragment extends Fragment {
 
                     adapter.setNotes(notes);
                     listSize = notes.size();
+
+                    adapter.notifyDataSetChanged();
 
                     if (notes.size() == 0) {
                         recyclerView.setVisibility(View.INVISIBLE);
@@ -175,7 +176,7 @@ public class ListFragment extends Fragment {
                         super.clearView(recyclerView, viewHolder);
 
                         if (dragFrom != -1 && dragTo != -1 && dragFrom != dragTo) {
-                            listViewModel.moveNote(adapter.getNote(dragFrom), adapter.getNote(dragTo), adapter);
+                            listViewModel.moveNote(adapter.getNote(dragFrom), adapter.getNote(dragTo));
                         }
                         dragTo = dragFrom = -1;
                     }
@@ -183,7 +184,7 @@ public class ListFragment extends Fragment {
                     @Override
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
 
-                        showSnackBar("TextNote deleted", android.R.color.holo_orange_dark);
+                        showSnackBar("Note deleted", android.R.color.holo_orange_dark);
                         listViewModel.deleteNote(adapter.getNote(viewHolder.getAdapterPosition()));
                         adapter.deleteNote(viewHolder.getAdapterPosition());
 
@@ -195,39 +196,38 @@ public class ListFragment extends Fragment {
         itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 
-    public static void updateNote(TextNote textNote, int position, View v) {
-        intents.updateNote(textNote, position, v);
+    public static void updateNote(Object noteType, int position, View v) {
+        intents.updateNote(noteType, position, v);
     }
 
-    public void addNote(TextNote textNote) {
+    public void addNote(Object note) {
 
-        Log.v("Alder", "Changing textNote");
+        Log.v("Alder", "Changing note");
         if (!sharedPreferences.getBoolean(TAG_FINISHED_FINAL_SPOTLIGHT, false)) {
-            Spotlight.with(getActivity())
-                    .setOverlayColor(ContextCompat.getColor(getContext(), R.color.background)) // background overlay color
-                    .setDuration(1000L) // duration of Spotlight emerging and disappearing in ms
-                    .setAnimation(new DecelerateInterpolator(2f)) // animation of Spotlight
-                    .setTargets(noteCardSpotlight) // set targets. see below for more info
-                    .setClosedOnTouchedOutside(true) // set if target is closed when touched outside
-                    .setOnSpotlightEndedListener(() -> {
-                        editor.putBoolean(TAG_FINISHED_FINAL_SPOTLIGHT, true);
-                        editor.apply();
-                    })
-                    .start(); // start Spotlight
+//            Spotlight.with(getActivity())
+//                    .setOverlayColor(ContextCompat.getColor(getContext(), R.color.background)) // background overlay color
+//                    .setDuration(1000L) // duration of Spotlight emerging and disappearing in ms
+//                    .setAnimation(new DecelerateInterpolator(2f)) // animation of Spotlight
+//                    .setTargets(noteCardSpotlight) // set targets. see below for more info
+//                    .setClosedOnTouchedOutside(true) // set if target is closed when touched outside
+//                    .setOnSpotlightEndedListener(() -> {
+//                        editor.putBoolean(TAG_FINISHED_FINAL_SPOTLIGHT, true);
+//                        editor.apply();
+//                    })
+//                    .start(); // start Spotlight
         }
-        isNewNote = textNote;
-        Log.v("Adler", "Adding new textNote " + textNote.getTitle());
-        listViewModel.insertNote(textNote);
+        isNewNote = note;
+        listViewModel.insertNote(note);
 
         recyclerView.smoothScrollToPosition(View.FOCUS_DOWN);
-        adapter.notifyItemInserted(listSize);
-        showSnackBar("New textNote added", R.color.colorAccent);
+//        adapter.notifyItemInserted(listSize);
+        showSnackBar("New note added", R.color.colorAccent);
     }
 
-    public void saveNote(TextNote textNote) {
-        listViewModel.updateNote(textNote);
+    public void saveNote(Object note) {
+        listViewModel.updateNote(note);
         recyclerView.smoothScrollToPosition(View.FOCUS_DOWN);
-        adapter.notifyDataSetChanged();
+//        adapter.notifyDataSetChanged();
     }
 
     public void checkScroll() {

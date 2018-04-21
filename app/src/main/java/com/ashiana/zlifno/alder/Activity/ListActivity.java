@@ -15,7 +15,7 @@ import android.widget.TextView;
 import com.ashiana.zlifno.alder.Fragment.AddTextNoteFragment;
 import com.ashiana.zlifno.alder.Fragment.ListFragment;
 import com.ashiana.zlifno.alder.R;
-import com.ashiana.zlifno.alder.data.TextNote;
+import com.ashiana.zlifno.alder.data.entity.NoteText;
 
 public class ListActivity extends AppCompatActivity implements ListFragment.MainIntents, AddTextNoteFragment.ChangeNoteIntent {
 
@@ -74,6 +74,7 @@ public class ListActivity extends AppCompatActivity implements ListFragment.Main
     @Override
     public void newNote() {
 
+        changeBarColors(R.color.colorPrimaryDark);
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .add(R.id.root_activity, new AddTextNoteFragment())
@@ -83,23 +84,22 @@ public class ListActivity extends AppCompatActivity implements ListFragment.Main
 
     // Called on touch
     @Override
-    public void updateNote(TextNote textNote, int position, View v) {
-
-        AddTextNoteFragment fragment = new AddTextNoteFragment();
-        Bundle args = new Bundle();
-        args.putString("transitionName", "transition" + position);
-        args.putSerializable("current", textNote);
-        fragment.setArguments(args);
-
-        if (getSupportFragmentManager().findFragmentByTag("AddTextNote") == null) {
+    public void updateNote(Object noteType, int position, View v) {
+        changeBarColors(R.color.colorPrimaryDark);
+        if (noteType instanceof NoteText) {
+            AddTextNoteFragment fragment = new AddTextNoteFragment();
+            Bundle args = new Bundle();
+            args.putString("transitionName", "transition" + position);
+            args.putSerializable("current", (NoteText) noteType);
+            fragment.setArguments(args);
+            getFragmentManager().popBackStack();
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.root_activity, fragment)
+                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                    .replace(R.id.root_activity, fragment)
                     .addToBackStack("AddTextNote")
                     .commit();
-        } else {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.root_activity, fragment, "AddTextNote");
         }
+
     }
 
 
@@ -108,24 +108,24 @@ public class ListActivity extends AppCompatActivity implements ListFragment.Main
         imm.hideSoftInputFromWindow(findViewById(R.id.root_activity).getWindowToken(), 0);
     }
 
-    // New textNote to add
+    // New noteText to add
     @Override
-    public void addNote(TextNote textNote) {
-//        changeBarColors(R.color.colorPrimary);
+    public void addNoteText(NoteText noteText) {
+        changeBarColors(R.color.colorPrimary);
         listFragment.closeFAB();
         hideKeyboard();
         getSupportFragmentManager().popBackStack();
-        listFragment.addNote(textNote);
+        listFragment.addNote(noteText);
     }
 
-    // Update contents of given textNote
+    // Update contents of given noteText
     @Override
-    public void saveNote(TextNote textNote) {
+    public void saveNoteText(NoteText noteText) {
 //        changeBarColors(R.color.colorPrimary);
         listFragment.closeFAB();
         hideKeyboard();
         getSupportFragmentManager().popBackStack();
-        listFragment.saveNote(textNote);
+        listFragment.saveNote(noteText);
     }
 
     @Override
@@ -150,6 +150,5 @@ public class ListActivity extends AppCompatActivity implements ListFragment.Main
         TextView textView = (TextView) snackBarView.findViewById(android.support.design.R.id.snackbar_text);
         textView.setTextColor(getResources().getColor(android.R.color.white));
         snackbar.show();
-
     }
 }

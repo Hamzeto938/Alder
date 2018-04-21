@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,10 +18,9 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.ViewSwitcher;
 
 import com.ashiana.zlifno.alder.R;
-import com.ashiana.zlifno.alder.data.TextNote;
+import com.ashiana.zlifno.alder.data.entity.NoteText;
 import com.leinardi.android.speeddial.SpeedDialActionItem;
 import com.leinardi.android.speeddial.SpeedDialView;
 import com.takusemba.spotlight.SimpleTarget;
@@ -37,9 +35,9 @@ public class AddTextNoteFragment extends Fragment {
     private ChangeNoteIntent changeNoteIntent;
 
     public interface ChangeNoteIntent {
-        void addNote(TextNote textNote);
+        void addNoteText(NoteText noteText);
 
-        void saveNote(TextNote textNote);
+        void saveNoteText(NoteText noteText);
 
         void titleEmpty();
     }
@@ -51,7 +49,7 @@ public class AddTextNoteFragment extends Fragment {
     private SpeedDialView speedDialView;
     AutofitEdittext autofitEdittext;
     private TextView noteTimeTextView;
-    private TextNote current;
+    private NoteText current;
     public static boolean viaBack;
 
     private SharedPreferences sharedPreferences;
@@ -75,15 +73,15 @@ public class AddTextNoteFragment extends Fragment {
 
         Bundle args = getArguments();
         if (args != null) {
-            TextNote textNote = (TextNote) args.getSerializable("current");
-            current = textNote;
+            NoteText noteText = (NoteText) args.getSerializable("current");
+            current = noteText;
         }
 
         if (current != null) {
-            titleEditText.setText(current.getTitle());
+            titleEditText.setText(current.title);
             autofitEdittext.setText(titleEditText.getText());
-            noteContentEditText.setText(current.getContent());
-            noteTimeTextView.setText(current.getTimeCreated());
+            noteContentEditText.setText(current.content);
+            noteTimeTextView.setText(current.timeCreated);
         } else {
             noteTimeTextView.setText(getCurrentDateTime());
         }
@@ -97,22 +95,22 @@ public class AddTextNoteFragment extends Fragment {
                 initSpotlights();
                 if (!sharedPreferences.getBoolean(TAG_FINISHED_ADD_NOTE_SPOTLIGHT, false)) {
 
-                    // callback when Spotlight ends
-                    Spotlight.with(getActivity())
-                            .setOverlayColor(ContextCompat.getColor(getContext(), R.color.background)) // background overlay color
-                            .setDuration(1000L) // duration of Spotlight emerging and disappearing in ms
-                            .setAnimation(new DecelerateInterpolator(2f)) // animation of Spotlight
-                            .setTargets(titleSpotlight, noteContentSpotlight, noteTimeSpotlight, saveFabSpotlight, titleSpotlight2)
-                            .setClosedOnTouchedOutside(true) // set if target is closed when touched outside
-                            .setOnSpotlightEndedListener(() -> {
-                                if (sharedPreferences.getBoolean(TAG_FINISHED_ADD_NOTE_SPOTLIGHT, true)) {
-                                    titleEditText.setFocusableInTouchMode(true);
-                                    titleEditText.requestFocus();
-                                    ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
-                                            .showSoftInput(titleEditText, InputMethodManager.SHOW_FORCED);
-                                }
-                            })
-                            .start(); // start Spotlight
+//                    // callback when Spotlight ends
+//                    Spotlight.with(getActivity())
+//                            .setOverlayColor(ContextCompat.getColor(getContext(), R.color.background)) // background overlay color
+//                            .setDuration(1000L) // duration of Spotlight emerging and disappearing in ms
+//                            .setAnimation(new DecelerateInterpolator(2f)) // animation of Spotlight
+//                            .setTargets(titleSpotlight, noteContentSpotlight, noteTimeSpotlight, saveFabSpotlight, titleSpotlight2)
+//                            .setClosedOnTouchedOutside(true) // set if target is closed when touched outside
+//                            .setOnSpotlightEndedListener(() -> {
+//                                if (sharedPreferences.getBoolean(TAG_FINISHED_ADD_NOTE_SPOTLIGHT, true)) {
+//                                    titleEditText.setFocusableInTouchMode(true);
+//                                    titleEditText.requestFocus();
+//                                    ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
+//                                            .showSoftInput(titleEditText, InputMethodManager.SHOW_FORCED);
+//                                }
+//                            })
+//                            .start(); // start Spotlight
 
                     editor.putBoolean(TAG_FINISHED_ADD_NOTE_SPOTLIGHT, true);
                     editor.apply();
@@ -161,13 +159,13 @@ public class AddTextNoteFragment extends Fragment {
                     String noteTitle = autofitEdittext.getText().toString();
                     String noteContent = noteContentEditText.getText().toString();
 
-                    TextNote toSend = new TextNote(noteTitle, noteContent, getCurrentDateTime());
+                    NoteText toSend = new NoteText(noteTitle, noteContent, getCurrentDateTime());
 
-                    changeNoteIntent.addNote(toSend);
+                    changeNoteIntent.addNoteText(toSend);
                 } else {
-                    current.setTitle(autofitEdittext.getText().toString());
-                    current.setContent(noteContentEditText.getText().toString());
-                    changeNoteIntent.saveNote(current);
+                    current.title = autofitEdittext.getText().toString();
+                    current.content = noteContentEditText.getText().toString();
+                    changeNoteIntent.saveNoteText(current);
                 }
             }
 

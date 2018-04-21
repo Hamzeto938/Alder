@@ -3,11 +3,11 @@ package com.ashiana.zlifno.alder.view_model;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
-import com.ashiana.zlifno.alder.data.TextNote;
-import com.ashiana.zlifno.alder.data.NoteRepository;
+import com.ashiana.zlifno.alder.data.entity.NoteText;
+import com.ashiana.zlifno.alder.data.entity.NoteType;
+import com.ashiana.zlifno.alder.data.repository.NoteRepository;
 
 import java.util.List;
 
@@ -15,47 +15,56 @@ import java.util.List;
 public class ListViewModel extends AndroidViewModel {
 
     private NoteRepository repository;
-    private LiveData<List<TextNote>> notesList;
+    private LiveData<List<NoteType>> notesList;
     public boolean inProgress;
 
     public ListViewModel(Application application) {
         super(application);
         repository = new NoteRepository(application);
-        notesList = repository.getNotesList();
+        notesList = repository.getNoteTypeList();
         inProgress = false;
     }
 
-    public LiveData<List<TextNote>> getNotesList() {
+    public LiveData<List<NoteType>> getNotesList() {
         return notesList;
     }
 
-    public void insertNote(TextNote textNote) {
+    public void insertNote(Object note) {
 
-        Log.v("Alder", "ListViewModel : Sending \"" + textNote.getTitle() + "\" to repository");
+        Log.v("Alder", "ListViewModel : Sending to repository");
 
-        repository.insertNote(textNote);
+        if (note instanceof NoteText) {
+            repository.insertNoteText((NoteText) note);
+        }
     }
 
-    public void deleteNote(TextNote textNote) {
-        Log.v("Alder", "ListViewModel : Deleting textNote id - " + textNote.getTitle());
+    public void deleteNote(Object note) {
+        Log.v("Alder", "ListViewModel : Deleting note");
 
-        repository.deleteNote(textNote);
+        if (note instanceof NoteText) {
+            repository.deleteNoteText((NoteText) note);
+        }
     }
 
-    public void moveNote(TextNote holdingTextNote, TextNote destinationTextNote, RecyclerView.Adapter adapter) {
+    public void moveNote(Object holdingNoteText, Object destinationNoteText) {
 
         Log.v("Alder", "ListViewModel : Moving note to new position");
 
-        repository.moveNote(holdingTextNote, destinationTextNote, this);
+        repository.moveNoteText((NoteType) holdingNoteText, (NoteType) destinationNoteText, this);
     }
 
-    public void updateNote(TextNote textNote) {
+    public void updateNote(Object note) {
 
-        Log.v("Alder", "ListViewModel : Updating textNote");
+        Log.v("Alder", "ListViewModel : Updating noteText");
 
-        repository.updateNote(textNote);
+        if (note instanceof NoteText) {
+            repository.updateNoteText((NoteText) note);
+        }
     }
 
+    public Object getNote(NoteType noteType) {
+        return repository.getNote(noteType);
+    }
 
 }
 
